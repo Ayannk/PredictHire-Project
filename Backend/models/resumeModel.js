@@ -4,10 +4,17 @@ const resumeSchema = new Schema({
   name: String,
   email: String,
   phone: String,
-  education: [String],
-  experience: [String],
+  education: [{
+    degree: String,
+    institution: String,
+    dates: String
+  }],
+  experience: [{
+    title: String,
+    description: String
+  }],
   skills: [String],
-  rawText: String, // optional
+  rawText: String
 });
 
 module.exports = model('resume', resumeSchema);

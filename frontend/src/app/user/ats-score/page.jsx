@@ -1,320 +1,287 @@
-"use client";
-import React, { ChangeEvent, useState } from 'react';
-import styles from './page.module.css';
+'use client';
+import React, { useState, useEffect } from 'react';
 import { IoCloseOutline } from "react-icons/io5";
+import styles from './page.module.css';
+import axios from 'axios';
 
-const FormData = {
-  jobDescription: String,
-  fullName: String,
-  aboutMe: String,
-  skills: [],
-  workExperience: String,
-  education: String,
-  certifications: String,
-}
+const ATSScorePage = () => {
+  const [formData, setFormData] = useState({
+    jobDescription: '',
+    fullName: '',
+    aboutMe: '',
+    skills: [],
+    workExperience: [],
+    education: [],
+    certifications: []
+  });
 
-
-const ScorePage = () => {
-  // {
-  //   jobDescription: "",
-  //   fullName: "",
-  //   aboutMe: "",
-  //   skills: [],
-  //   workExperience: [],
-  //   education: [],
-  //   certifications: []
-  // }
-  const [formData, setFormData] = useState<FormData>(
-    {
-      jobDescription: "Looking for a skilled frontend developer to join our dynamic team.",
-      fullName: "John Doe",
-      aboutMe: "Passionate developer with over 5 years of experience in web development.",
-      skills: ["HTML", "CSS", "JavaScript", "React"],
-      workExperience: ["Frontend Developer at ABC Corp", "Web Developer at XYZ Ltd"],
-      education: ["B.Sc. in Computer Science", "M.Sc. in Software Engineering"],
-      certifications: ["Certified ScrumMaster", "AWS Certified Solutions Architect"]
-    }
-  )
-
-
-  // {
-  //   jobDescription: "Looking for a skilled frontend developer to join our dynamic team.", 
-  //   fullName: "John Doe", 
-  //   aboutMe: "Passionate developer with over 5 years of experience in web development.", 
-  //   skills: ["HTML", "CSS", "JavaScript", "React"],
-  //    workExperience: ["Frontend Developer at ABC Corp", "Web Developer at XYZ Ltd"],
-  //     education: ["B.Sc. in Computer Science", "M.Sc. in Software Engineering"],
-  //      certifications: ["Certified ScrumMaster", "AWS Certified Solutions Architect"]
-  // }
-
-  const [newSkill, setNewSkill] = useState<string>("");
-  const [newWorkExperience, setNewWorkExperience] = useState<string>("");
-  const [newEducation, setNewEducation] = useState<string>("");
-  const [newCertification, setNewCertification] = useState<string>("");
+  const [newSkill, setNewSkill] = useState('');
+  const [newWorkExperience, setNewWorkExperience] = useState('');
+  const [newEducation, setNewEducation] = useState('');
+  const [newCertification, setNewCertification] = useState('');
+  const [score, setScore] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [feedback, setFeedback] = useState(null);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData({
-      ...formData,
+    setFormData(prev => ({
+      ...prev,
       [name]: value
-    })
-  }
+    }));
+  };
 
   const handleAddSkill = () => {
-    if (newSkill.trim() !== "") {
-      setFormData({
-        ...formData,
-        skills: [...formData.skills, newSkill]
-      })
-      setNewSkill("");
-
+    if (newSkill.trim()) {
+      setFormData(prev => ({
+        ...prev,
+        skills: [...prev.skills, newSkill.trim()]
+      }));
+      setNewSkill('');
     }
-  }
-  const handleRemoveSkill = (index) => {
-    setFormData({
-      ...formData,
-      skills: formData.skills.filter((_, i) => i !== index)
-    })
-  }
+  };
+
   const handleAddWorkExperience = () => {
-    if (newWorkExperience.trim() !== "") {
-      setFormData({
-        ...formData,
-        workExperience: [...formData.workExperience, newWorkExperience]
-      });
-      setNewWorkExperience("");
+    if (newWorkExperience.trim()) {
+      setFormData(prev => ({
+        ...prev,
+        workExperience: [...prev.workExperience, newWorkExperience.trim()]
+      }));
+      setNewWorkExperience('');
     }
   };
-  const handleRemoveWorkExperience = (index) => {
-    setFormData({
-      ...formData,
-      workExperience: formData.workExperience.filter((_, i) => i !== index)
-    });
-  };
+
   const handleAddEducation = () => {
-    if (newEducation.trim() !== "") {
-      setFormData({
-        ...formData,
-        education: [...formData.education, newEducation]
-      });
-      setNewEducation("");
+    if (newEducation.trim()) {
+      setFormData(prev => ({
+        ...prev,
+        education: [...prev.education, newEducation.trim()]
+      }));
+      setNewEducation('');
     }
   };
-  const handleRemoveEducation = (index) => {
-    setFormData({
-      ...formData,
-      education: formData.education.filter((_, i) => i !== index)
-    });
-  };
+
   const handleAddCertification = () => {
-    if (newCertification.trim() !== "") {
-      setFormData({
-        ...formData,
-        certifications: [...formData.certifications, newCertification]
-      });
-      setNewCertification("");
+    if (newCertification.trim()) {
+      setFormData(prev => ({
+        ...prev,
+        certifications: [...prev.certifications, newCertification.trim()]
+      }));
+      setNewCertification('');
     }
   };
-  const handleRemoveCertification = (index) => {
-    setFormData({
-      ...formData,
-      certifications: formData.certifications.filter((_, i) => i !== index)
-    });
+
+  const handleRemoveSkill = (index) => {
+    setFormData(prev => ({
+      ...prev,
+      skills: prev.skills.filter((_, i) => i !== index)
+    }));
   };
 
+  const handleRemoveWorkExperience = (index) => {
+    setFormData(prev => ({
+      ...prev,
+      workExperience: prev.workExperience.filter((_, i) => i !== index)
+    }));
+  };
 
+  const handleRemoveEducation = (index) => {
+    setFormData(prev => ({
+      ...prev,
+      education: prev.education.filter((_, i) => i !== index)
+    }));
+  };
 
-  const [ATSscore, setATSscore] = useState<string>("");
-  const getAtsScore = async () => {
-    let GOOGLE_API_KEY = process.env.NEXT_PUBLIC_GEMINI_API
+  const handleRemoveCertification = (index) => {
+    setFormData(prev => ({
+      ...prev,
+      certifications: prev.certifications.filter((_, i) => i !== index)
+    }));
+  };
 
-
-    //     Suppose ATS score in percentage is X% for someone with the following qualifications:
-
-    //  {
-    //    jobDescription: "Looking for a moovie actor",
-    //    fullName: "John Doe",
-    //    aboutMe: "Passionate developer with over 5 years of experience in web development.",
-    //    skills: ["HTML", "CSS", "JavaScript", "React"],
-    //    workExperience: ["Frontend Developer at ABC Corp", "Web Developer at XYZ Ltd"],
-    //    education: ["B.Sc. in Computer Science", "M.Sc. in Software Engineering"],
-    //    certifications: ["Certified ScrumMaster", "AWS Certified Solutions Architect"]
-    //   }
-
-    //  So, if I ask "What is the estimated ATS score based on this information?", then just give the exact value of X, nothing else.
-
-
-    // What is the estimated ATS score based on this information ?
-
-    const tempPrompt = `
-    Suppose ATS score in percentage is X% for someone with the following qualifications:
-    
-${formData}
-
- So, if I ask "What is the estimated ATS score based on this information?", then just give the exact value of X, nothing else.
-`
-
-    const conversation = [
-      {
-        parts: [{ text: tempPrompt }],
-        role: "user",
-      },
-      {
-        parts: [{ text: "Okay, I understand." }],
-        role: "model",
-      },
-      {
-        parts: [{ text: "What is the estimated ATS score based on this information?" }],
-        role: "user",
-      },
-    ]
-
-    let url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=` + GOOGLE_API_KEY
-    let res = await fetch(url, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        "contents": conversation
-      })
-    })
-
-    let resjson = await res.json()
-    // console.log(resjson)
-    const score = resjson.candidates[0].content.parts[0].text;
-    console.log(score)
-
-    setATSscore(score)
-  }
-
+  const calculateScore = async () => {
+    setLoading(true);
+    try {
+      const response = await axios.post('http://localhost:5000/api/calculate-ats-score', formData);
+      setScore(response.data.score);
+      setFeedback(response.data.feedback);
+    } catch (error) {
+      console.error('Error calculating score:', error);
+    }
+    setLoading(false);
+  };
 
   return (
-    <div className={styles.page}>
-      {ATSscore.length > 0 ?
-        <div className={styles.result}>
-          <p>Your Score is</p>
-          <h1>{ATSscore}</h1>
+    <div className="container mx-auto px-4 py-8">
+      <div className="max-w-4xl mx-auto">
+        <div className="bg-white rounded-lg shadow-lg p-6">
+          <h1 className="text-3xl font-bold text-gray-800 mb-8">ATS Score Calculator</h1>
+
+          {/* Job Description Section */}
+          <div className="mb-6">
+            <label className="block text-lg font-semibold text-gray-700 mb-2">Job Description</label>
+            <textarea
+              className="w-full h-40 p-3 border rounded-lg focus:ring-2 focus:ring-indigo-500"
+              name="jobDescription"
+              placeholder="Paste the job description here..."
+              value={formData.jobDescription}
+              onChange={handleChange}
+            />
+          </div>
+
+          {/* Personal Information */}
+          <div className="mb-6">
+            <h2 className="text-xl font-semibold text-gray-800 mb-4">Personal Information</h2>
+            <input
+              type="text"
+              name="fullName"
+              placeholder="Full Name"
+              value={formData.fullName}
+              onChange={handleChange}
+              className="w-full p-3 border rounded-lg mb-4 focus:ring-2 focus:ring-indigo-500"
+            />
+            <textarea
+              name="aboutMe"
+              placeholder="Professional Summary"
+              value={formData.aboutMe}
+              onChange={handleChange}
+              className="w-full h-32 p-3 border rounded-lg focus:ring-2 focus:ring-indigo-500"
+            />
+          </div>
+
+          {/* Skills Section */}
+          <div className="mb-6">
+            <h2 className="text-xl font-semibold text-gray-800 mb-4">Skills</h2>
+            <div className="flex flex-wrap gap-2 mb-3">
+              {formData.skills.map((skill, index) => (
+                <div key={index} className="bg-indigo-100 px-3 py-1 rounded-full flex items-center">
+                  <span className="text-indigo-800">{skill}</span>
+                  <button
+                    onClick={() => handleRemoveSkill(index)}
+                    className="ml-2 text-indigo-600 hover:text-indigo-800"
+                  >
+                    <IoCloseOutline />
+                  </button>
+                </div>
+              ))}
+            </div>
+            <div className="flex gap-2">
+              <input
+                type="text"
+                placeholder="Add a skill"
+                value={newSkill}
+                onChange={(e) => setNewSkill(e.target.value)}
+                className="flex-1 p-2 border rounded-lg focus:ring-2 focus:ring-indigo-500"
+              />
+              <button
+                onClick={handleAddSkill}
+                className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700"
+              >
+                Add
+              </button>
+            </div>
+          </div>
+
+          {/* Work Experience Section */}
+          <div className="mb-6">
+            <h2 className="text-xl font-semibold text-gray-800 mb-4">Work Experience</h2>
+            <div className="space-y-2 mb-3">
+              {formData.workExperience.map((exp, index) => (
+                <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                  <span>{exp}</span>
+                  <button
+                    onClick={() => handleRemoveWorkExperience(index)}
+                    className="text-red-600 hover:text-red-800"
+                  >
+                    <IoCloseOutline />
+                  </button>
+                </div>
+              ))}
+            </div>
+            <div className="flex gap-2">
+              <input
+                type="text"
+                placeholder="Add work experience"
+                value={newWorkExperience}
+                onChange={(e) => setNewWorkExperience(e.target.value)}
+                className="flex-1 p-2 border rounded-lg focus:ring-2 focus:ring-indigo-500"
+              />
+              <button
+                onClick={handleAddWorkExperience}
+                className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700"
+              >
+                Add
+              </button>
+            </div>
+          </div>
+
+          {/* Education Section */}
+          <div className="mb-6">
+            <h2 className="text-xl font-semibold text-gray-800 mb-4">Education</h2>
+            <div className="space-y-2 mb-3">
+              {formData.education.map((edu, index) => (
+                <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                  <span>{edu}</span>
+                  <button
+                    onClick={() => handleRemoveEducation(index)}
+                    className="text-red-600 hover:text-red-800"
+                  >
+                    <IoCloseOutline />
+                  </button>
+                </div>
+              ))}
+            </div>
+            <div className="flex gap-2">
+              <input
+                type="text"
+                placeholder="Add education"
+                value={newEducation}
+                onChange={(e) => setNewEducation(e.target.value)}
+                className="flex-1 p-2 border rounded-lg focus:ring-2 focus:ring-indigo-500"
+              />
+              <button
+                onClick={handleAddEducation}
+                className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700"
+              >
+                Add
+              </button>
+            </div>
+          </div>
+
+          {/* Calculate Score Button */}
           <button
-            onClick={() => setATSscore("")}
-          >Check Again</button>
+            onClick={calculateScore}
+            disabled={loading}
+            className="w-full py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50"
+          >
+            {loading ? 'Calculating...' : 'Calculate ATS Score'}
+          </button>
+
+          {/* Score Display */}
+          {score !== null && (
+            <div className="mt-8 p-6 bg-gray-50 rounded-lg">
+              <div className="text-center">
+                <h3 className="text-2xl font-bold text-gray-800 mb-2">Your ATS Score</h3>
+                <div className="text-5xl font-bold text-indigo-600 mb-4">{score}%</div>
+                {feedback && (
+                  <div className="mt-4 text-left">
+                    <h4 className="font-semibold mb-2">Feedback:</h4>
+                    <ul className="list-disc list-inside space-y-2">
+                      {Object.entries(feedback).map(([key, value]) => (
+                        <li key={key} className="text-gray-700">
+                          <span className="font-medium">{key}:</span> {value}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
         </div>
-        :
-        <div className={styles.main}>
-          <h1 className={styles.header}>Check ATS Score</h1>
-          <label className={styles.label}>Job Description</label>
-          <textarea
-            className={styles.textarea}
-            name="jobDescription"
-            placeholder='Enter Job Description'
-            value={formData.jobDescription}
-            onChange={handleChange}
-          />
-          <label className={styles.label}>Full Name</label>
-          <input
-            className={styles.input}
-            name="fullName"
-            placeholder='Enter Full Name'
-            value={formData.fullName}
-            onChange={handleChange}
-          />
-          <label className={styles.label}>About me</label>
-          <textarea
-            className={styles.textarea}
-            name="aboutMe"
-            placeholder='About me'
-            value={formData.aboutMe}
-            onChange={handleChange}
-          />
-
-
-
-          <label className={styles.label}>Skills</label>
-          <div className={styles.list1}>
-            {formData.skills.map((item, index) => (
-              <p key={index} className={styles.list1Item}>{item}
-                <IoCloseOutline onClick={() => handleRemoveSkill(index)} />
-              </p>
-            ))}
-          </div>
-          <div className={styles.inputRow}>
-            <input
-              className={styles.input}
-              placeholder='New Skill'
-              value={newSkill}
-              onChange={(e) => setNewSkill(e.target.value)}
-            />
-            <button
-              className={styles.button} onClick={handleAddSkill}
-            >Add</button>
-          </div>
-
-
-          <label className={styles.label}>Work Experience</label>
-          <div className={styles.list2}>
-            {formData.workExperience.map((item, index) => (
-              <p key={index} className={styles.list2Item}>
-                {item}
-                <IoCloseOutline onClick={() => handleRemoveWorkExperience(index)} />
-              </p>
-            ))}
-          </div>
-          <div className={styles.inputRow}>
-            <input
-              className={styles.input}
-              placeholder='New Work Experience'
-              value={newWorkExperience}
-              onChange={(e) => setNewWorkExperience(e.target.value)}
-            />
-            <button className={styles.button} onClick={handleAddWorkExperience}>Add</button>
-          </div>
-
-          <label className={styles.label}>Education</label>
-          <div className={styles.list2}>
-            {formData.education.map((item, index) => (
-              <p key={index} className={styles.list2Item}>
-                {item}
-                <IoCloseOutline onClick={() => handleRemoveEducation(index)} />
-              </p>
-            ))}
-          </div>
-          <div className={styles.inputRow}>
-            <input
-              className={styles.input}
-              placeholder='New Education'
-              value={newEducation}
-              onChange={(e) => setNewEducation(e.target.value)}
-            />
-            <button className={styles.button} onClick={handleAddEducation}>Add</button>
-          </div>
-
-
-          <label className={styles.label}>Certifications</label>
-          <div className={styles.list2}>
-            {formData.certifications.map((item, index) => (
-              <p key={index} className={styles.list2Item}>
-                {item}
-                <IoCloseOutline onClick={() => handleRemoveCertification(index)} />
-              </p>
-            ))}
-          </div>
-          <div className={styles.inputRow}>
-            <input
-              className={styles.input}
-              placeholder='New Certification'
-              value={newCertification}
-              onChange={(e) => setNewCertification(e.target.value)}
-            />
-            <button className={styles.button} onClick={handleAddCertification}>Add</button>
-          </div>
-          <button
-            className={styles.button}
-            onClick={() => getAtsScore()}
-          >Scan</button>
-        </div>
-      }
+      </div>
     </div>
-  )
-}
+  );
+};
 
-export default ScorePage
+export default ATSScorePage;
