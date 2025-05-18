@@ -14,7 +14,9 @@ const resumeSchema = new Schema({
     description: String
   }],
   skills: [String],
-  rawText: String
+  rawText: String,
+  originalFile: String,  // Path to the original uploaded PDF file
+  mimeType: String      // MIME type of the original file
 });
 
 module.exports = model('resume', resumeSchema);

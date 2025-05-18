@@ -8,6 +8,7 @@ const Resume = require('../models/resumeModel');
 const { PDFDocument, rgb } = require('pdf-lib');
 const path = require('path');
 const fsPromises = require('fs').promises;
+const verifyToken = require('../middlewares/verifyToken');
 
 const router = express.Router();
 const upload = multer({ dest: 'uploads/' });
@@ -186,81 +187,321 @@ function extractArray(text, fieldName) {
 }
 
 // Template-based resume creation endpoint
-router.post('/create', async (req, res) => {
+router.post('/create', verifyToken, async (req, res) => {
   try {
     const { templateId, resumeData } = req.body;
+    const userId = req.user.id;
 
-    // Create a new PDF document
-    const pdfDoc = await PDFDocument.create();
-    const page = pdfDoc.addPage([595.28, 841.89]); // A4 size
-
-    // Get font
-    const font = await pdfDoc.embedFont(PDFDocument.Standard.Helvetica);
-    const boldFont = await pdfDoc.embedFont(PDFDocument.Standard.HelveticaBold);
-
-    // Set drawing context
-    const { width, height } = page.getSize();
-    let currentY = height - 50; // Start from top with margin
-    const margin = 50;
-    const lineHeight = 20;
-
-    // Helper function to write text
-    const writeText = (text, fontSize = 12, isTitle = false) => {
-      page.drawText(text, {
-        x: margin,
-        y: currentY,
-        size: fontSize,
-        font: isTitle ? boldFont : font,
-        color: rgb(0, 0, 0),
-      });
-      currentY -= lineHeight;
-    };
-
-    // Write personal information
-    writeText(resumeData.personalInfo.fullName, 24, true);
-    writeText(resumeData.personalInfo.email, 12);
-    writeText(resumeData.personalInfo.phone, 12);
-    writeText(resumeData.personalInfo.location, 12);
-    currentY -= lineHeight;
-
-    // Write summary
-    if (resumeData.summary) {
-      writeText('Professional Summary', 16, true);
-      writeText(resumeData.summary, 12);
-      currentY -= lineHeight;
-    }
-
-    // Write experience
-    writeText('Work Experience', 16, true);
-    resumeData.experience.forEach(exp => {
-      writeText(`${exp.title} at ${exp.company}`, 14, true);
-      writeText(`${exp.startDate} - ${exp.current ? 'Present' : exp.endDate}`, 12);
-      writeText(exp.description, 12);
-      currentY -= lineHeight;
+    // Create a new resume document
+    const resume = new Resume({
+      userId,
+      templateId,
+      name: resumeData.personalInfo.fullName,
+      email: resumeData.personalInfo.email,
+      phone: resumeData.personalInfo.phone,
+      education: resumeData.education,
+      experience: resumeData.experience,
+      skills: resumeData.skills,
+      projects: resumeData.projects,
+      originalContent: resumeData,
+      status: 'active'
     });
 
-    // Write skills
-    writeText('Skills', 16, true);
-    if (resumeData.skills.technical) {
-      writeText('Technical Skills:', 14, true);
-      writeText(resumeData.skills.technical, 12);
-    }
-    if (resumeData.skills.soft) {
-      writeText('Soft Skills:', 14, true);
-      writeText(resumeData.skills.soft, 12);
-    }
+    // Save resume to database
+    await resume.save();
 
-    // Generate PDF bytes
+    // Generate PDF based on template
+    const pdfDoc = await PDFDocument.create();
+    const page = pdfDoc.addPage([595.276, 841.890]); // A4 size
+
+    // Get template layout based on templateId
+    const templateLayout = getTemplateLayout(templateId);
+    
+    // Apply template layout and add content
+    await applyTemplateToPage(page, resumeData, templateLayout);
+
+    // Save PDF
     const pdfBytes = await pdfDoc.save();
+    const pdfPath = path.join(__dirname, '..', 'uploads', `${resume._id}.pdf`);
+    await fs.writeFile(pdfPath, pdfBytes);
 
-    // Send the PDF as response
-    res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader('Content-Disposition', 'attachment; filename=resume.pdf');
-    res.send(Buffer.from(pdfBytes));
+    // Update resume with file path
+    resume.filePath = pdfPath;
+    await resume.save();
 
+    res.status(201).json({
+      message: 'Resume created successfully',
+      resumeId: resume._id
+    });
   } catch (error) {
     console.error('Error creating resume:', error);
-    res.status(500).json({ error: 'Failed to create resume' });
+    res.status(500).json({ message: 'Error creating resume' });
+  }
+});
+
+// Helper function to get template layout
+function getTemplateLayout(templateId) {
+  const templates = {
+    1: {
+      // Modern template
+      headerHeight: 150,
+      sidebarWidth: 200,
+      sidebarColor: rgb(0.9, 0.9, 0.9),
+      mainTextColor: rgb(0.2, 0.2, 0.2),
+      accentColor: rgb(0.2, 0.4, 0.8)
+    },
+    2: {
+      // Creative template
+      headerHeight: 200,
+      sidebarWidth: 0,
+      mainTextColor: rgb(0.2, 0.2, 0.2),
+      accentColor: rgb(0.8, 0.3, 0.3)
+    },
+    3: {
+      // Classic template
+      headerHeight: 120,
+      sidebarWidth: 0,
+      mainTextColor: rgb(0, 0, 0),
+      accentColor: rgb(0.4, 0.4, 0.4)
+    },
+    4: {
+      // Technical template
+      headerHeight: 100,
+      sidebarWidth: 180,
+      sidebarColor: rgb(0.2, 0.2, 0.2),
+      mainTextColor: rgb(0.2, 0.2, 0.2),
+      accentColor: rgb(0.2, 0.6, 0.4)
+    }
+  };
+  
+  return templates[templateId] || templates[1];
+}
+
+// Helper function to apply template to PDF page
+async function applyTemplateToPage(page, resumeData, layout) {
+  const { width, height } = page.getSize();
+  const fontSize = 12;
+  
+  // Add personal info section
+  page.drawText(resumeData.personalInfo.fullName, {
+    x: layout.sidebarWidth + 50,
+    y: height - 50,
+    size: 24,
+    color: layout.mainTextColor
+  });
+
+  // Add contact info
+  page.drawText(resumeData.personalInfo.email, {
+    x: layout.sidebarWidth + 50,
+    y: height - 80,
+    size: fontSize,
+    color: layout.mainTextColor
+  });
+
+  // Continue adding other sections...
+  // This is a basic implementation - you'll need to expand this
+  // to handle all resume sections and proper formatting
+}
+
+router.post('/rank-resumes', upload.array('resumes', 10), async (req, res) => {
+  try {
+    const { jobDescription } = req.body;
+    if (!jobDescription) {
+      return res.status(400).json({ message: 'Job description is required' });
+    }
+
+    if (!req.files || req.files.length === 0) {
+      return res.status(400).json({ message: 'No resume files uploaded' });
+    }
+
+    const processedResumes = [];
+
+    // Process each resume
+    for (const file of req.files) {
+      const filePath = file.path;
+      const mimeType = file.mimetype;
+      let fileContent = '';
+
+      // Extract text content from different file types
+      if (mimeType === 'application/pdf') {
+        const pdfBuffer = fs.readFileSync(filePath);
+        const pdfData = await pdfParse(pdfBuffer);
+        fileContent = pdfData.text;
+      } else if (mimeType === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') {
+        const docxBuffer = fs.readFileSync(filePath);
+        const docxData = await mammoth.extractRawText({ buffer: docxBuffer });
+        fileContent = docxData.value;
+      } else {
+        fileContent = fs.readFileSync(filePath, 'utf-8');
+      }
+
+      // Call Gemini API for analyzing resume against job description
+      const geminiResponse = await axios.post(
+        'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent',
+        {
+          contents: [
+            {
+              parts: [
+                {
+                  text: `Analyze how well this resume matches the job description and provide a score out of 100. 
+                  Also provide key matching points and missing skills.
+                  Return the response in JSON format with these fields:
+                  - score: number (0-100)
+                  - matchingPoints: array of strings
+                  - missingSkills: array of strings
+                  - analysis: string (brief explanation)
+
+                  Job Description:
+                  ${jobDescription}
+
+                  Resume Content:
+                  ${fileContent}`,
+                },
+              ],
+            },
+          ],
+        },
+        {
+          params: {
+            key: process.env.GEMINI_API_KEY,
+          },
+        }
+      );
+
+      // Parse the response
+      const resultText = geminiResponse.data.candidates[0]?.content?.parts[0]?.text || '';
+      let analysisData;
+
+      try {
+        const jsonMatch = resultText.match(/```json\n([\s\S]*?)\n```/) || 
+                         resultText.match(/```\n([\s\S]*?)\n```/) ||
+                         resultText.match(/{[\s\S]*?}/);
+        
+        if (jsonMatch) {
+          analysisData = JSON.parse(jsonMatch[0].replace(/```json\n|```\n|```/g, ''));
+        } else {
+          throw new Error('Could not parse JSON response');
+        }
+      } catch (error) {
+        analysisData = {
+          score: 0,
+          matchingPoints: [],
+          missingSkills: [],
+          analysis: 'Error analyzing resume'
+        };
+      }
+
+      processedResumes.push({
+        fileName: file.originalname,
+        ...analysisData
+      });
+
+      // Clean up uploaded file
+      fs.unlink(filePath, (err) => {
+        if (err) console.error('Error deleting file:', err);
+      });
+    }
+
+    // Sort resumes by score in descending order
+    const rankedResumes = processedResumes.sort((a, b) => b.score - a.score);
+
+    res.json({
+      message: 'Resumes ranked successfully',
+      totalResumes: rankedResumes.length,
+      rankings: rankedResumes
+    });
+
+  } catch (error) {
+    console.error("Error ranking resumes:", error.response?.data || error.message);
+    res.status(500).json({ message: 'Error processing and ranking resumes' });
+  }
+});
+
+router.post('/rank-selected', async (req, res) => {
+  try {
+    const { resumeIds, jobDescription } = req.body;
+    
+    // Fetch selected resumes from database
+    const resumes = await Resume.find({
+      '_id': { $in: resumeIds }
+    });
+
+    const rankingResults = [];
+
+    // Analyze each resume against the job description
+    for (const resume of resumes) {
+      // Call Gemini API for analysis
+      const geminiResponse = await axios.post(
+        'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent',
+        {
+          contents: [
+            {
+              parts: [
+                {
+                  text: `Analyze how well this resume matches the job description and provide a score out of 100. 
+                  Also provide key matching points and missing skills.
+                  Return the response in JSON format with these fields:
+                  - score: number (0-100)
+                  - matchingPoints: array of strings
+                  - missingSkills: array of strings
+
+                  Job Description:
+                  ${jobDescription}
+
+                  Resume Content:
+                  ${resume.rawText || JSON.stringify(resume)}`,
+                },
+              ],
+            },
+          ],
+        },
+        {
+          params: {
+            key: process.env.GEMINI_API_KEY,
+          },
+        }
+      );
+
+      const resultText = geminiResponse.data.candidates[0]?.content?.parts[0]?.text || '';
+      let analysisData;
+
+      try {
+        const jsonMatch = resultText.match(/```json\n([\s\S]*?)\n```/) || 
+                         resultText.match(/```\n([\s\S]*?)\n```/) ||
+                         resultText.match(/{[\s\S]*?}/);
+        
+        if (jsonMatch) {
+          analysisData = JSON.parse(jsonMatch[0].replace(/```json\n|```\n|```/g, ''));
+        } else {
+          throw new Error('Could not parse JSON response');
+        }
+      } catch (error) {
+        analysisData = {
+          score: 0,
+          matchingPoints: [],
+          missingSkills: [],
+        };
+      }
+
+      rankingResults.push({
+        ...analysisData,
+        name: resume.name,
+        email: resume.email,
+        resumeId: resume._id
+      });
+    }
+
+    // Sort results by score
+    rankingResults.sort((a, b) => b.score - a.score);
+
+    res.json({
+      message: 'Resumes ranked successfully',
+      rankings: rankingResults
+    });
+
+  } catch (error) {
+    console.error("Error ranking resumes:", error);
+    res.status(500).json({ message: 'Error processing and ranking resumes' });
   }
 });
 
@@ -272,6 +513,143 @@ router.get('/getall', (req, res) => {
       console.log(err);
       res.status(500).json({ error: err.message });
     });
+});
+
+router.get('/view/:id', async (req, res) => {
+  try {
+    const resume = await Resume.findById(req.params.id);
+    if (!resume) {
+      return res.status(404).json({ message: 'Resume not found' });
+    }
+
+    // Check if we have a stored PDF file
+    const pdfPath = path.join(__dirname, '..', 'uploads', `${resume._id}.pdf`);
+    if (fs.existsSync(pdfPath)) {
+      // Stream the PDF file
+      const stat = fs.statSync(pdfPath);
+      res.setHeader('Content-Length', stat.size);
+      res.setHeader('Content-Type', 'application/pdf');
+      const readStream = fs.createReadStream(pdfPath);
+      readStream.pipe(res);
+    } else {
+      // If no PDF exists, return the raw data
+      res.json(resume);
+    }
+  } catch (error) {
+    console.error("Error fetching resume:", error);
+    res.status(500).json({ message: 'Error retrieving resume' });
+  }
+});
+
+router.get('/view/data/:id', async (req, res) => {
+  try {
+    const resume = await Resume.findById(req.params.id);
+    if (!resume) {
+      return res.status(404).json({ message: 'Resume not found' });
+    }
+
+    // Create a nicely formatted HTML page
+    const html = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>${resume.name}'s Resume</title>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <style>
+            body {
+                font-family: Arial, sans-serif;
+                line-height: 1.6;
+                max-width: 800px;
+                margin: 0 auto;
+                padding: 20px;
+                background: #f5f5f5;
+            }
+            .resume {
+                background: white;
+                padding: 40px;
+                border-radius: 8px;
+                box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            }
+            .section {
+                margin-bottom: 30px;
+            }
+            h1 {
+                color: #2c3e50;
+                margin-bottom: 10px;
+            }
+            h2 {
+                color: #34495e;
+                border-bottom: 2px solid #3498db;
+                padding-bottom: 5px;
+                margin-bottom: 15px;
+            }
+            .contact-info {
+                color: #7f8c8d;
+                margin-bottom: 20px;
+            }
+            .skill {
+                display: inline-block;
+                background: #e8f4fc;
+                padding: 5px 10px;
+                border-radius: 15px;
+                margin: 5px;
+                color: #2980b9;
+            }
+            .experience-item, .education-item {
+                margin-bottom: 20px;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="resume">
+            <div class="section">
+                <h1>${resume.name}</h1>
+                <div class="contact-info">
+                    <div>${resume.email}</div>
+                    <div>${resume.phone}</div>
+                </div>
+            </div>
+
+            <div class="section">
+                <h2>Skills</h2>
+                <div>
+                    ${resume.skills.map(skill => `<span class="skill">${skill}</span>`).join('')}
+                </div>
+            </div>
+
+            <div class="section">
+                <h2>Experience</h2>
+                ${resume.experience.map(exp => `
+                    <div class="experience-item">
+                        <h3>${exp.title}</h3>
+                        <p>${exp.description}</p>
+                    </div>
+                `).join('')}
+            </div>
+
+            <div class="section">
+                <h2>Education</h2>
+                ${resume.education.map(edu => `
+                    <div class="education-item">
+                        <h3>${edu.degree}</h3>
+                        <div>${edu.institution}</div>
+                        <div>${edu.dates}</div>
+                    </div>
+                `).join('')}
+            </div>
+        </div>
+    </body>
+    </html>
+    `;
+
+    // Send the HTML response
+    res.setHeader('Content-Type', 'text/html');
+    res.send(html);
+  } catch (error) {
+    console.error("Error fetching resume:", error);
+    res.status(500).json({ message: 'Error retrieving resume' });
+  }
 });
 
 module.exports = router;

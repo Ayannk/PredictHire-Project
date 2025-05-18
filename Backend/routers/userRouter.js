@@ -1,6 +1,5 @@
 const express = require('express');
 const Model = require('../models/userModel');
-
 const router = express.Router();
 const jwt = require('jsonwebtoken');
 require('dotenv').config();
@@ -30,28 +29,6 @@ router.get('/getall', (req, res) => {
 
 });
 
-// : denotes url parameter
-router.get('/getbycity/:city', (req, res) => {
-    console.log(req.params.city);
-    Model.find({ city: req.params.city })
-        .then((result) => {
-            res.status(200).json(result);
-        }).catch((err) => {
-            console.log(err);
-            res.status(500).json(err);
-        });
-});
-
-router.get('/getbyemail/:email', (req, res) => {
-    console.log(req.params.email);
-    Model.findOne({ email: req.params.email })
-        .then((result) => {
-            res.status(200).json(result);
-        }).catch((err) => {
-            console.log(err);
-            res.status(500).json(err);
-        });
-});
 
 // getbyid
 router.get('/getbyid/:id', (req, res) => {
@@ -93,7 +70,7 @@ router.post('/authenticate', (req, res) => {
             if (result) {
                 // generate token
 
-                const { _id, name, email } = result;
+                const { _id, name, email, role } = result;
                 const payload = { _id, name, email };
 
                 jwt.sign(
@@ -105,7 +82,7 @@ router.post('/authenticate', (req, res) => {
                             console.log(err);
                             res.status(500).json(err);
                         } else {
-                            res.status(200).json({ token });
+                            res.status(200).json({ token, role });
                         }
                     }
                 )

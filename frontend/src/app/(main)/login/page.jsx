@@ -13,23 +13,31 @@ const LoginSchema = Yup.object().shape({
 
 const Login = () => {
 
-  const Router = useRouter();
+  const router = useRouter();
 
   const loginForm = useFormik({
     initialValues:{
       email: '',
-      password: ''
+      password: '',
+      // role: 'user'
     },
+
     onSubmit: (values,{resetForm, setSubmitting}) => {
       console.log(values);
       
-      axios.post('http://localhost:5000/user/authenticate', values)
+      axios.post(`${process.env.NEXT_PUBLIC_API_URL}/api/users/authenticate`, values)
       .then((result) => {
         toast.success('Login successful');
         resetForm();
         console.log(result.data?.token);
-        localStorage.setItem('token', result.data?.token);
-        Router.push('/');
+        if (result.data?.role === 'admin') {
+          router.push('/admin/rank-resume');
+          localStorage.setItem('admin', result.data?.token);
+        } else {
+          localStorage.setItem('token', result.data?.token);
+          router.push('/user/upload-resume');
+        }
+        // Router.push('/');
 
       }).catch((err) => {
         console.log(err);

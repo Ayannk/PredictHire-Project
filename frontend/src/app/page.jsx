@@ -23,7 +23,7 @@ const Home = () => {
                   Streamline your hiring process with our intelligent resume matching system. Upload resumes, manage job
                   descriptions, and find the perfect candidates faster.
                 </p>
-                <div className="flex flex-col sm:flex-row gap-4">
+                {/* <div className="flex flex-col sm:flex-row gap-4">
                   <Button size="lg">
                     Start Free Trial
                     <ArrowRight className="ml-2 h-4 w-4" />
@@ -32,7 +32,7 @@ const Home = () => {
                   <Button variant="outline" size="lg">
                     Watch Demo
                   </Button>
-                </div>
+                </div> */}
               </div>
               <div className="relative h-[400px] w-full rounded-lg overflow-hidden shadow-xl">
                 <img
@@ -139,7 +139,7 @@ const Home = () => {
               <div className="group relative overflow-hidden rounded-lg border bg-background shadow-sm transition-all hover:shadow-md">
                 <div className="aspect-[3/4] relative">
                   <Image
-                    src="https://images.unsplash.com/photo-1586281380349-632531db7ed4?q=80&w=800"
+                    src="/templates/template2.png"
                     alt="Classic Resume Template"
                     fill
                     className="object-cover transition-transform group-hover:scale-105"
@@ -159,7 +159,7 @@ const Home = () => {
               <div className="group relative overflow-hidden rounded-lg border bg-background shadow-sm transition-all hover:shadow-md">
                 <div className="aspect-[3/4] relative">
                   <Image
-                    src="/templates/template1.png"
+                    src="/templates/template3.png"
                     alt="Creative Resume Template"
                     fill
                     className="object-cover transition-transform group-hover:scale-105"
@@ -179,7 +179,7 @@ const Home = () => {
               <div className="group relative overflow-hidden rounded-lg border bg-background shadow-sm transition-all hover:shadow-md">
                 <div className="aspect-[3/4] relative">
                   <Image
-                    src="https://images.unsplash.com/photo-1521737852567-6949f3f9f2b5?q=80&w=800"
+                    src="/templates/template4.png"
                     alt="Modern Resume Template"
                     fill
                     className="object-cover transition-transform group-hover:scale-105"
@@ -199,7 +199,7 @@ const Home = () => {
               <div className="group relative overflow-hidden rounded-lg border bg-background shadow-sm transition-all hover:shadow-md">
                 <div className="aspect-[3/4] relative">
                   <Image
-                    src="https://images.unsplash.com/photo-1552664730-d307ca884978?q=80&w=800"
+                    src="/templates/template5.png"
                     alt="Professional Resume Template"
                     fill
                     className="object-cover transition-transform group-hover:scale-105"
@@ -219,7 +219,7 @@ const Home = () => {
               <div className="group relative overflow-hidden rounded-lg border bg-background shadow-sm transition-all hover:shadow-md">
                 <div className="aspect-[3/4] relative">
                   <Image
-                    src="https://images.unsplash.com/photo-1553028826-f4804a6dba3b?q=80&w=800"
+                    src="/templates/template6.png"
                     alt="Executive Resume Template"
                     fill
                     className="object-cover transition-transform group-hover:scale-105"
@@ -239,7 +239,7 @@ const Home = () => {
               <div className="group relative overflow-hidden rounded-lg border bg-background shadow-sm transition-all hover:shadow-md">
                 <div className="aspect-[3/4] relative">
                   <Image
-                    src="https://images.unsplash.com/photo-1600880292203-757bb62b4baf?q=80&w=800"
+                    src="/templates/template7.png"
                     alt="Technical Resume Template"
                     fill
                     className="object-cover transition-transform group-hover:scale-105"
