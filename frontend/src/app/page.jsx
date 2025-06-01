@@ -10,7 +10,7 @@ const Home = () => {
     <div className="flex min-h-screen flex-col">
       
 
-      <main className="flex-1 md:pt-28">
+      <main className="flex-1 pt-28 md:pt-0">
         {/* Hero Section */}
         <section className="w-full py-12 md:py-24 lg:py-32 bg-gradient-to-b from-muted/50 to-muted">
           <div className="container px-4 md:px-6">
