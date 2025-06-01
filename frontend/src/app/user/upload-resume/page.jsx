@@ -50,7 +50,7 @@ function ManageResume() {
         try {
             setLoading(true);
             setError(null);
-            const response = await axios.post('http://localhost:5000/api/resume/upload', formData, {
+            const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/api/resume/upload`, formData, {
                 headers: {
                     'Content-Type': 'multipart/form-data',
                 },

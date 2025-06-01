@@ -102,7 +102,7 @@ const ATSScorePage = () => {
   const calculateScore = async () => {
     setLoading(true);
     try {
-      const response = await axios.post('http://localhost:5000/api/calculate-ats-score', formData);
+      const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/api/calculate-ats-score`, formData);
       setScore(response.data.score);
       setFeedback(response.data.feedback);
     } catch (error) {
