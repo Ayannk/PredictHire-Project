@@ -1,5 +1,5 @@
 'use client';
-import React, { useState, useEffect } from 'react'; // Fixed typo in useEffect
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 
 function ManageResume() {
@@ -82,14 +82,14 @@ function ManageResume() {
     };
 
     return (
-        <div className="bg-blue-50 w-full mt-16 mx-auto px-20 py-14 ">
-            <div className="grid md:grid-cols-1 gap-8 ">
+        <div className="bg-blue-50 w-full mt-16 mx-auto px-4 sm:px-6 lg:px-20 py-8 sm:py-14">
+            <div className="max-w-7xl mx-auto">
                 {/* Resume Upload Section */}
-                <div className="bg-white p-6 rounded-lg shadow-lg w-1/2 mx-auto">
-                    <h2 className="text-2xl font-bold text-gray-800 mb-6">Resume Checker</h2>
+                <div className="bg-white p-4 sm:p-6 rounded-lg shadow-lg w-full sm:w-4/5 lg:w-2/3 xl:w-1/2 mx-auto">
+                    <h2 className="text-xl sm:text-2xl font-bold text-gray-800 mb-4 sm:mb-6">Resume Checker</h2>
                     
                     <div 
-                        className={`border-2 border-dashed rounded-lg p-8 text-center ${
+                        className={`border-2 border-dashed rounded-lg p-4 sm:p-8 text-center ${
                             dragActive ? 'border-indigo-600 bg-indigo-50' : 'border-gray-300'
                         }`}
                         onDragEnter={handleDrag}
@@ -122,11 +122,11 @@ function ManageResume() {
 
                     {selectedFile && (
                         <div className="mt-4 flex flex-col items-center">
-                            <p className="text-sm text-gray-600">Selected: {selectedFile.name}</p>
+                            <p className="text-sm text-gray-600 text-center break-all px-2">{selectedFile.name}</p>
                             <button
                                 onClick={handleUpload}
                                 disabled={loading}
-                                className="mt-2 w-1/2 bg-indigo-600 text-white py-2 px-4 rounded-lg hover:bg-indigo-700 disabled:opacity-50"
+                                className="mt-2 w-full sm:w-2/3 md:w-1/2 bg-indigo-600 text-white py-2 px-4 rounded-lg hover:bg-indigo-700 disabled:opacity-50"
                             >
                                 {loading ? 'Uploading...' : 'Upload Resume'}
                             </button>
@@ -134,108 +134,70 @@ function ManageResume() {
                     )}
 
                     {error && (
-                        <div className="mt-4 p-3 bg-red-100 text-red-700 rounded-lg">
+                        <div className="mt-4 p-3 bg-red-100 text-red-700 rounded-lg text-sm sm:text-base">
                             {error}
                         </div>
                     )}
                 </div>
 
-                {/* Job Descriptions Section */}
-                {/* <div className="bg-white p-6 rounded-lg shadow-lg">
-                    <h2 className="text-2xl font-bold text-gray-800 mb-6">Job Descriptions</h2>
-                    
-                    <div className="mb-6">
-                        <input
-                            type="text"
-                            placeholder="Job Title"
-                            value={newJobDescription.title}
-                            onChange={(e) => setNewJobDescription({ ...newJobDescription, title: e.target.value })}
-                            className="w-full mb-2 p-2 border rounded-lg"
-                        />
-                        <textarea
-                            placeholder="Job Description"
-                            value={newJobDescription.description}
-                            onChange={(e) => setNewJobDescription({ ...newJobDescription, description: e.target.value })}
-                            className="w-full h-32 p-2 border rounded-lg mb-2"
-                        />
-                        <button
-                            onClick={handleAddJobDescription}
-                            className="w-full bg-indigo-600 text-white py-2 px-4 rounded-lg hover:bg-indigo-700"
-                        >
-                            Add Job Description
-                        </button>
-                    </div>
-
-                    <div className="space-y-4">
-                        {jobDescriptions.map((job) => (
-                            <div key={job.id} className="p-4 border rounded-lg">
-                                <div className="flex justify-between items-start mb-2">
-                                    <h3 className="font-semibold">{job.title}</h3>
-                                    <button
-                                        onClick={() => handleDeleteJobDescription(job.id)}
-                                        className="text-red-600 hover:text-red-800"
-                                    >
-                                        <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-                                        </svg>
-                                    </button>
+                {/* Resume Data Display */}
+                {resumeData && (
+                    <div className="mt-8 bg-white p-4 sm:p-6 rounded-lg shadow-lg">
+                        <h2 className="text-xl sm:text-2xl font-bold text-gray-800 mb-4">Parsed Resume Data</h2>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+                            <div className="space-y-3">
+                                <h3 className="font-semibold mb-2">Personal Information</h3>
+                                <div className="space-y-2 text-sm sm:text-base">
+                                    <p><span className="font-medium">Name:</span> {resumeData.name}</p>
+                                    <p><span className="font-medium">Email:</span> 
+                                        <span className="break-all"> {resumeData.email}</span>
+                                    </p>
+                                    <p><span className="font-medium">Phone:</span> {resumeData.phone}</p>
                                 </div>
-                                <p className="text-sm text-gray-600">{job.description}</p>
                             </div>
-                        ))}
-                    </div>
-                </div> */}
-            </div>
 
-            {/* Resume Data Display */}
-            {resumeData && (
-                <div className="mt-8 bg-white p-6 rounded-lg shadow-lg">
-                    <h2 className="text-2xl font-bold text-gray-800 mb-4">Parsed Resume Data</h2>
-                    <div className="grid md:grid-cols-2 gap-6">
-                        <div>
-                            <h3 className="font-semibold mb-2">Personal Information</h3>
-                            <p><span className="font-medium">Name:</span> {resumeData.name}</p>
-                            <p><span className="font-medium">Email:</span> {resumeData.email}</p>
-                            <p><span className="font-medium">Phone:</span> {resumeData.phone}</p>
-                        </div>
-                        <div>
-                            <h3 className="font-semibold mb-2">Skills</h3>
-                            <div className="flex flex-wrap gap-2">
-                                {resumeData.skills?.map((skill, index) => (
-                                    <span key={index} className="px-3 py-1 bg-indigo-100 text-indigo-800 rounded-full text-sm">
-                                        {skill}
-                                    </span>
-                                ))}
+                            <div>
+                                <h3 className="font-semibold mb-2">Skills</h3>
+                                <div className="flex flex-wrap gap-2">
+                                    {resumeData.skills?.map((skill, index) => (
+                                        <span 
+                                            key={index} 
+                                            className="px-2 sm:px-3 py-1 bg-indigo-100 text-indigo-800 rounded-full text-xs sm:text-sm"
+                                        >
+                                            {skill}
+                                        </span>
+                                    ))}
+                                </div>
                             </div>
-                        </div>
-                        
-                        <div>
-                            <h3 className="font-semibold mb-2">Education</h3>
-                            <div className="space-y-2">
-                                {resumeData.education?.map((edu, index) => (
-                                    <div key={index} className="p-3 bg-gray-50 rounded-lg">
-                                        <p className="font-medium">{edu.degree}</p>
-                                        <p className="text-sm text-gray-600">{edu.institution}</p>
-                                        <p className="text-sm text-gray-500">{edu.dates}</p>
-                                    </div>
-                                ))}
+                            
+                            <div className="space-y-3">
+                                <h3 className="font-semibold mb-2">Education</h3>
+                                <div className="space-y-2">
+                                    {resumeData.education?.map((edu, index) => (
+                                        <div key={index} className="p-2 sm:p-3 bg-gray-50 rounded-lg">
+                                            <p className="font-medium text-sm sm:text-base">{edu.degree}</p>
+                                            <p className="text-xs sm:text-sm text-gray-600">{edu.institution}</p>
+                                            <p className="text-xs sm:text-sm text-gray-500">{edu.dates}</p>
+                                        </div>
+                                    ))}
+                                </div>
                             </div>
-                        </div>
-                        
-                        <div>
-                            <h3 className="font-semibold mb-2">Experience</h3>
-                            <div className="space-y-2">
-                                {resumeData.experience?.map((exp, index) => (
-                                    <div key={index} className="p-3 bg-gray-50 rounded-lg">
-                                        <p className="font-medium">{exp.title}</p>
-                                        <p className="text-sm text-gray-600 whitespace-pre-line">{exp.description}</p>
-                                    </div>
-                                ))}
+                            
+                            <div className="space-y-3">
+                                <h3 className="font-semibold mb-2">Experience</h3>
+                                <div className="space-y-2">
+                                    {resumeData.experience?.map((exp, index) => (
+                                        <div key={index} className="p-2 sm:p-3 bg-gray-50 rounded-lg">
+                                            <p className="font-medium text-sm sm:text-base">{exp.title}</p>
+                                            <p className="text-xs sm:text-sm text-gray-600 whitespace-pre-line">{exp.description}</p>
+                                        </div>
+                                    ))}
+                                </div>
                             </div>
                         </div>
                     </div>
-                </div>
-            )}
+                )}
+            </div>
         </div>
     );
 }
