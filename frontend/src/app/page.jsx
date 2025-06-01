@@ -122,7 +122,7 @@ const Home = () => {
         </section>
 
         {/* Resume Templates Section */}
-        <section id="templates" className="w-full py-12 md:py-24 bg-muted/50 ">
+        {/* <section id="templates" className="w-full py-12 md:py-24 bg-muted/50 ">
           <div className="container px-4 md:px-6 ">
             <div className="flex flex-col items-center justify-center space-y-4 text-center ">
               <div className="space-y-2">
@@ -257,7 +257,7 @@ const Home = () => {
               </div>
             </div>
           </div>
-        </section>
+        </section> */}
 
         {/* How It Works Section */}
         <section id="how-it-works" className="w-full py-12 md:py-24">
@@ -410,13 +410,13 @@ const Home = () => {
                 </p>
               </div>
               <div className="flex flex-col sm:flex-row gap-4">
-                <Button size="lg">
+                {/* <Button size="lg">
                   Start Free Trial
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
                 <Button variant="outline" size="lg">
                   Schedule a Demo
-                </Button>
+                </Button> */}
               </div>
             </div>
           </div>
