@@ -1,9 +1,10 @@
 'use client';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Image from 'next/image';
 
-const ResumeBuilder = () => {
+// Create a separate component for the form content
+const ResumeBuilderForm = () => {
   const searchParams = useSearchParams();
   const templateId = searchParams.get('template');
 
@@ -447,6 +448,21 @@ const ResumeBuilder = () => {
         }
       `}</style>
     </div>
+  );
+};
+
+// Main component with Suspense boundary
+const ResumeBuilder = () => {
+  return (
+    <Suspense 
+      fallback={
+        <div className="min-h-screen flex items-center justify-center mt-16">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+        </div>
+      }
+    >
+      <ResumeBuilderForm />
+    </Suspense>
   );
 };
 

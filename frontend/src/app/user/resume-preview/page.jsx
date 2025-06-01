@@ -1,8 +1,8 @@
 'use client';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 
-const ResumePreview = () => {
+const ResumePreviewContent = () => {
   const searchParams = useSearchParams();
   const resumeId = searchParams.get('id');
   const [pdfUrl, setPdfUrl] = useState(null);
@@ -81,6 +81,19 @@ const ResumePreview = () => {
         </div>
       </div>
     </div>
+  );
+};
+
+// Wrapper component with Suspense
+const ResumePreview = () => {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center mt-16">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+      </div>
+    }>
+      <ResumePreviewContent />
+    </Suspense>
   );
 };
 
